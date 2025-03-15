@@ -2,7 +2,7 @@
 #define _MYSTL_TEMP_VALUE_H
 
 #include <config.h>
-#include <type_traits>
+#include <memory>
 #include <utility>
 
 _MYSTL_BEGIN_NAMESPACE_MYSTL

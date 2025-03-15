@@ -11,9 +11,6 @@
 #define _MYSTL_ALLOCS_H
 
 #include <config.h>
-#include <limits>
-#include <new>
-#include <stdexcept>
 
 _MYSTL_BEGIN_NAMESPACE_MYSTL
 
