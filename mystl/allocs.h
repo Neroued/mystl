@@ -17,13 +17,9 @@ _MYSTL_BEGIN_NAMESPACE_MYSTL
 // 暂时不用constexpr
 class alloc {
 public:
-    [[nodiscard]] static void* allocate(size_t size) {
-        return ::operator new(size);
-    }
+    [[nodiscard]] static void* allocate(size_t size) { return ::operator new(size); }
 
-    static void deallocate(void* ptr, size_t bytes) noexcept {
-        return ::operator delete(ptr);
-    }
+    static void deallocate(void* ptr, size_t bytes) noexcept { return ::operator delete(ptr); }
 };
 
 _MYSTL_END_NAMESPACE_MYSTL

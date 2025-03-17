@@ -7,13 +7,14 @@
 #include <exception_guard.h>
 #include <initializer_list>
 #include <iterator.h>
+#include <limits>
 #include <temp_value.h>
 #include <uninitialized_algorithms.h>
 
 
 _MYSTL_BEGIN_NAMESPACE_MYSTL
 
-template <typename _Tp, class _Allocator = allocator<_Tp>>
+template <typename _Tp, class _Allocator = mystl::allocator<_Tp>>
 class vector {
 public:
     using value_type             = _Tp;
@@ -25,8 +26,8 @@ public:
     using difference_type        = typename alloc_traits::difference_type;
     using pointer                = typename alloc_traits::pointer;   // 例如这可能是 std::unique_ptr<_Tp>
     using const_pointer          = typename alloc_traits::const_pointer;
-    using iterator               = wrap_iter<pointer>;
-    using const_iterator         = wrap_iter<const_pointer>;
+    using iterator               = mystl::wrap_iter<pointer>;
+    using const_iterator         = mystl::wrap_iter<const_pointer>;
     using reverse_iterator       = mystl::reverse_iterator<iterator>;
     using const_reverse_iterator = mystl::reverse_iterator<const_iterator>;
 
@@ -48,7 +49,7 @@ public:
     _MYSTL_CONSTEXPR_SINCE_CXX20 vector(const allocator_type& __a) noexcept : __alloc_(__a) {} // 在 C++17 及以后，拷贝构造分配器不会造成异常
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 explicit vector(size_type __n) {
-        auto __guard = __make_exception_guard(__destroy_vector(*this));
+        auto __guard = mystl::__make_exception_guard(__destroy_vector(*this));
         if (__n > 0) {
             __vallocate(__n);
             __construct_at_end(__n);
@@ -57,7 +58,7 @@ public:
     }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 explicit vector(size_type __n, const allocator_type& __a) : __alloc_(__a) {
-        auto __guard = __make_exception_guard(__destroy_vector(*this));
+        auto __guard = mystl::__make_exception_guard(__destroy_vector(*this));
         if (__n > 0) {
             __vallocate(__n);
             __construct_at_end(__n);
@@ -66,7 +67,7 @@ public:
     }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 vector(size_type __n, const_reference __x) {
-        auto __guard = __make_exception_guard(__destroy_vector(*this));
+        auto __guard = mystl::__make_exception_guard(__destroy_vector(*this));
         if (__n > 0) {
             __vallocate(__n);
             __construct_at_end(__n, __x);
@@ -76,7 +77,7 @@ public:
 
     template <std::enable_if_t<is_allocator<_Allocator>::value, int> = 0>
     _MYSTL_CONSTEXPR_SINCE_CXX20 vector(size_type __n, const_reference __x, const allocator_type& __a) : __alloc_(__a) {
-        auto __guard = __make_exception_guard(__destroy_vector(*this));
+        auto __guard = mystl::__make_exception_guard(__destroy_vector(*this));
         if (__n > 0) {
             __vallocate(__n);
             __construct_at_end(__n, __x);
@@ -88,7 +89,7 @@ public:
 // input_iterator 必须一个个进行构造，且无法预先知道长度
 #if _MYSTL_CXX_VERSION <= 17
     template <class _InputIterator,
-              std::enable_if_t<is_exact_input_iterator<_InputIterator>::value &&
+              std::enable_if_t<mystl::is_exact_input_iterator<_InputIterator>::value &&
                                    std::is_constructible<value_type, typename iterator_traits<_InputIterator>::reference>::value,
                                int> = 0>
 #else
@@ -101,7 +102,7 @@ public:
 
 #if _MYSTL_CXX_VERSION <= 17
     template <class _InputIterator,
-              std::enable_if_t<is_exact_input_iterator<_InputIterator>::value &&
+              std::enable_if_t<mystl::is_exact_input_iterator<_InputIterator>::value &&
                                    std::is_constructible<value_type, typename iterator_traits<_InputIterator>::reference>::value,
                                int> = 0>
 #else
@@ -115,7 +116,7 @@ public:
 // 强于 input_iterator 的可以提前知道长度，且可以多次访问
 // 在 __init_with_size 内部使用的算法 __unintialized_allocator_copy 在 C++20 下对 contiguous_iterator 有优化
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _ForwardIterator, std::enable_if_t<is_based_on_forward_iterator<_ForwardIterator>::value &&
+    template <class _ForwardIterator, std::enable_if_t<mystl::is_based_on_forward_iterator<_ForwardIterator>::value &&
                                                            std::is_constructible_v<value_type, typename iterator_traits<_ForwardIterator>::reference>,
                                                        int> = 0>
 #else
@@ -128,7 +129,7 @@ public:
     }
 
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _ForwardIterator, std::enable_if_t<is_based_on_forward_iterator<_ForwardIterator>::value &&
+    template <class _ForwardIterator, std::enable_if_t<mystl::is_based_on_forward_iterator<_ForwardIterator>::value &&
                                                            std::is_constructible_v<value_type, typename iterator_traits<_ForwardIterator>::reference>,
                                                        int> = 0>
 #else
@@ -150,9 +151,7 @@ public:
     }
 
     // 使用 initializer_list 构造
-    _MYSTL_CONSTEXPR_SINCE_CXX20 vector(std::initializer_list<value_type> __il) {
-        __init_with_size(__il.begin(), __il.end(), __il.size());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 vector(std::initializer_list<value_type> __il) { __init_with_size(__il.begin(), __il.end(), __il.size()); }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 vector(std::initializer_list<value_type> __il, const allocator_type& __a) : __alloc_(__a) {
         __init_with_size(__il.begin(), __il.end(), __il.size());
@@ -186,7 +185,7 @@ public:
 
 #if _MYSTL_CXX_VERSION <= 17
     template <class _InputIterator,
-              std::enable_if_t<is_exact_input_iterator<_InputIterator>::value &&
+              std::enable_if_t<mystl::is_exact_input_iterator<_InputIterator>::value &&
                                    std::is_constructible<value_type, typename iterator_traits<_InputIterator>::reference>::value,
                                int> = 0>
 #else
@@ -198,7 +197,7 @@ public:
     }
 
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _ForwardIterator, std::enable_if_t<is_based_on_forward_iterator<_ForwardIterator>::value &&
+    template <class _ForwardIterator, std::enable_if_t<mystl::is_based_on_forward_iterator<_ForwardIterator>::value &&
                                                            std::is_constructible_v<value_type, typename iterator_traits<_ForwardIterator>::reference>,
                                                        int> = 0>
 #else
@@ -225,9 +224,7 @@ public:
         }
     }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 void assign(std::initializer_list<value_type> __il) {
-        assign(__il.begin(), __il.end());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 void assign(std::initializer_list<value_type> __il) { assign(__il.begin(), __il.end()); }
 
 private:
     // 辅助析构的类
@@ -253,75 +250,43 @@ public:
     // assign
 
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 allocator_type get_allocator() const noexcept {
-        return __alloc_;
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 allocator_type get_allocator() const noexcept { return __alloc_; }
 
     //
     // Iterators
     //
-    _MYSTL_CONSTEXPR_SINCE_CXX20 iterator begin() noexcept {
-        return __make_iter(__begin_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 iterator begin() noexcept { return __make_iter(__begin_); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator begin() const noexcept {
-        return __make_iter(__begin_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator begin() const noexcept { return __make_iter(__begin_); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 iterator end() noexcept {
-        return __make_iter(__end_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 iterator end() noexcept { return __make_iter(__end_); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator end() const noexcept {
-        return __make_iter(__end_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator end() const noexcept { return __make_iter(__end_); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 reverse_iterator rbegin() noexcept {
-        return reverse_iterator(end());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 reverse_iterator rbegin() noexcept { return reverse_iterator(end()); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator rbegin() const noexcept {
-        return const_reverse_iterator(end());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(end()); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 reverse_iterator rend() noexcept {
-        return reverse_iterator(begin());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 reverse_iterator rend() noexcept { return reverse_iterator(begin()); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator rend() const noexcept {
-        return const_reverse_iterator(begin());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator rend() const noexcept { return const_reverse_iterator(begin()); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator cbegin() const noexcept {
-        return begin();
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator cbegin() const noexcept { return begin(); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator cend() const noexcept {
-        return end();
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator cend() const noexcept { return end(); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator crbegin() const noexcept {
-        return rbegin();
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator crbegin() const noexcept { return rbegin(); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator crend() const noexcept {
-        return rend();
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reverse_iterator crend() const noexcept { return rend(); }
 
     //
     // [vector.capacity], capacity
     //
-    _MYSTL_CONSTEXPR_SINCE_CXX20 size_type size() const noexcept {
-        return static_cast<size_type>(__end_ - __begin_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 size_type size() const noexcept { return static_cast<size_type>(__end_ - __begin_); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 size_type capacity() const noexcept {
-        return static_cast<size_type>(__cap_ - __begin_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 size_type capacity() const noexcept { return static_cast<size_type>(__cap_ - __begin_); }
 
-    [[nodiscard]] _MYSTL_CONSTEXPR_SINCE_CXX20 bool empty() const noexcept {
-        return __begin_ == __end_;
-    }
+    [[nodiscard]] _MYSTL_CONSTEXPR_SINCE_CXX20 bool empty() const noexcept { return __begin_ == __end_; }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 size_type max_size() const noexcept {
         return std::min<size_type>(alloc_traits::max_size(this->__alloc_), std::numeric_limits<difference_type>::max());
@@ -349,13 +314,9 @@ public:
     }
 
     // element access
-    _MYSTL_CONSTEXPR_SINCE_CXX20 reference operator[](size_type __n) noexcept {
-        return __begin_[__n];
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 reference operator[](size_type __n) noexcept { return __begin_[__n]; }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reference operator[](size_type __n) const noexcept {
-        return __begin_[__n];
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reference operator[](size_type __n) const noexcept { return __begin_[__n]; }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 reference at(size_type __n) {
         if (__n >= size()) { throw std::out_of_range("vector"); }
@@ -367,42 +328,26 @@ public:
         return __begin_[__n];
     }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 reference front() noexcept {
-        return *__begin_;
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 reference front() noexcept { return *__begin_; }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reference front() const noexcept {
-        return *__begin_;
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reference front() const noexcept { return *__begin_; }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 reference back() noexcept {
-        return *(__end_ - 1);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 reference back() noexcept { return *(__end_ - 1); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reference back() const noexcept {
-        return *(__end_ - 1);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_reference back() const noexcept { return *(__end_ - 1); }
 
     //
     // [vector.data], data access
-    _MYSTL_CONSTEXPR_SINCE_CXX20 value_type* data() noexcept {
-        return std::addressof(*__begin_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 value_type* data() noexcept { return std::addressof(*__begin_); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const value_type* data() const noexcept {
-        return std::addressof(*__begin_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const value_type* data() const noexcept { return std::addressof(*__begin_); }
 
     //
     // [vector.modifiers], modifiers
     //
-    _MYSTL_CONSTEXPR_SINCE_CXX20 void push_back(const_reference __x) {
-        emplace_back(__x);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 void push_back(const_reference __x) { emplace_back(__x); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 void push_back(value_type&& __x) {
-        emplace_back(std::move(__x));
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 void push_back(value_type&& __x) { emplace_back(std::move(__x)); }
 
     // emplace_back 分为触发扩容与不触发扩容两个函数
     template <class... _Args>
@@ -415,9 +360,7 @@ public:
         return *(__end_ - 1);
     }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 void pop_back() {
-        __base_destruct_at_end(__end_ - 1);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 void pop_back() { __base_destruct_at_end(__end_ - 1); }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 iterator insert(const_iterator __position, const_reference __x) {
         pointer __p = __begin_ + (__position - begin());
@@ -504,7 +447,7 @@ public:
 
 #if _MYSTL_CXX_VERSION <= 17
     template <class _InputIterator,
-              std::enable_if_t<is_exact_input_iterator<_InputIterator>::value &&
+              std::enable_if_t<mystl::is_exact_input_iterator<_InputIterator>::value &&
                                    std::is_constructible<value_type, typename iterator_traits<_InputIterator>::reference>::value,
                                int> = 0>
 #else
@@ -524,7 +467,7 @@ public:
         } else {                 // 扩容
             // 开辟一个缓冲区用于构造剩余要插入的元素
             __reallocation_buffer __buffer(__alloc_);
-            auto __guard = __make_exception_guard(_AllocatorDestroyRangeReverse<allocator_type, pointer>(__alloc_, __old_last, __end_));
+            auto __guard = mystl::__make_exception_guard(_AllocatorDestroyRangeReverse<allocator_type, pointer>(__alloc_, __old_last, __end_));
             __buffer.__construct_at_end_with_sentinel(std::move(__first), std::move(__last));
 
             size_type __count = static_cast<size_type>(__cap_ - __old_last); // 在剩余空间中构造的元素数量
@@ -550,7 +493,7 @@ public:
     }
 
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _ForwardIterator, std::enable_if_t<is_based_on_forward_iterator<_ForwardIterator>::value &&
+    template <class _ForwardIterator, std::enable_if_t<mystl::is_based_on_forward_iterator<_ForwardIterator>::value &&
                                                            std::is_constructible_v<value_type, typename iterator_traits<_ForwardIterator>::reference>,
                                                        int> = 0>
 #else
@@ -627,9 +570,7 @@ public:
         return __make_iter(__p);
     }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 void clear() noexcept {
-        __base_destruct_at_end(__begin_);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 void clear() noexcept { __base_destruct_at_end(__begin_); }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 void resize(size_type __size) {
         size_type __current_size = size();
@@ -706,9 +647,7 @@ private:
             : __v_(__v), __pos_(__v.__end_), __new_end_(__v.__end_ + __n) {}
 
         // 析构时修改对应 vector 的 __end_
-        _MYSTL_CONSTEXPR_SINCE_CXX20 ~_ConstructTransaction() {
-            __v_.__end_ = __pos_;
-        }
+        _MYSTL_CONSTEXPR_SINCE_CXX20 ~_ConstructTransaction() { __v_.__end_ = __pos_; }
 
         vector& __v_;
         pointer __pos_;
@@ -797,9 +736,7 @@ private:
             std::swap(__alloc_, __other.__alloc_);
         }
 
-        _MYSTL_CONSTEXPR_SINCE_CXX20 size_type size() const noexcept {
-            return __end_ - __begin_;
-        }
+        _MYSTL_CONSTEXPR_SINCE_CXX20 size_type size() const noexcept { return __end_ - __begin_; }
 
         _MYSTL_CONSTEXPR_SINCE_CXX20 void __construct_at(pointer __p, size_type __n) {
             pointer __new_p = __p + __n;
@@ -895,14 +832,14 @@ private:
 
     template <class _InputIterator, class _Sentinel>
     _MYSTL_CONSTEXPR_SINCE_CXX20 void __init_with_sentinel(_InputIterator __first, _Sentinel __last) {
-        auto __guard = __make_exception_guard(__destroy_vector(*this));
+        auto __guard = mystl::__make_exception_guard(__destroy_vector(*this));
         for (; __first != __last; ++__first) { emplace_back(*__first); }
         __guard.__complete();
     }
 
     template <class _ForwardIterator, class _Sentinel>
     _MYSTL_CONSTEXPR_SINCE_CXX20 void __init_with_size(_ForwardIterator __first, _Sentinel __last, size_type __n) {
-        auto __guard = __make_exception_guard(__destroy_vector(*this));
+        auto __guard = mystl::__make_exception_guard(__destroy_vector(*this));
         if (__n > 0) {
             __vallocate(__n);
             __construct_at_end(__first, __last, __n);
@@ -911,13 +848,9 @@ private:
         __guard.__complete();
     }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 iterator __make_iter(pointer __p) noexcept {
-        return iterator(__p);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 iterator __make_iter(pointer __p) noexcept { return iterator(__p); }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator __make_iter(const_pointer __p) const noexcept {
-        return const_iterator(__p);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 const_iterator __make_iter(const_pointer __p) const noexcept { return const_iterator(__p); }
 
     // 将 [__from_s, __from_e) 之间的元素移动到 __to 开始的位置
     // 要求 __to - __from_s >= 0
@@ -1005,18 +938,20 @@ private:
         if (__alloc_ != __x.__alloc_) {
             assign(__x.begin(), __x.end());
         } else {
-            __move__assign(__x, std::true_type);
+            __move__assign(__x, std::true_type());
         }
     }
 };
 
 // CTAD
 template <class _InputIterator, class _Alloc = allocator<typename iterator_traits<_InputIterator>::value_type>,
-          typename = std::enable_if_t<is_based_on_input_iterator<_InputIterator>::value>, typename = std::enable_if_t<is_allocator<_Alloc>::value>>
+          typename = std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>,
+          typename = std::enable_if_t<is_allocator<_Alloc>::value>>
 vector(_InputIterator, _InputIterator) -> vector<typename iterator_traits<_InputIterator>::value_type, _Alloc>;
 
 template <class _InputIterator, class _Alloc = allocator<typename iterator_traits<_InputIterator>::value_type>,
-          typename = std::enable_if_t<is_based_on_input_iterator<_InputIterator>::value>, typename = std::enable_if_t<is_allocator<_Alloc>::value>>
+          typename = std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>,
+          typename = std::enable_if_t<is_allocator<_Alloc>::value>>
 vector(_InputIterator, _InputIterator, _Alloc) -> vector<typename iterator_traits<_InputIterator>::value_type, _Alloc>;
 
 _MYSTL_END_NAMESPACE_MYSTL

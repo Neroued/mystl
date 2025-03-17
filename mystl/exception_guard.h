@@ -1,6 +1,7 @@
 #ifndef _MYSTL_EXCEPTION_GUARD_H
 #define _MYSTL_EXCEPTION_GUARD_H
 
+#include <algorithm>
 #include <config.h>
 #include <type_traits>
 
@@ -31,9 +32,7 @@ struct __exception_guard_exceptions {
     __exception_guard_exceptions& operator=(__exception_guard_exceptions const&) = delete;
     __exception_guard_exceptions& operator=(__exception_guard_exceptions&&)      = delete;
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 void __complete() noexcept {
-        __completed_ = true;
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 void __complete() noexcept { __completed_ = true; }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 ~__exception_guard_exceptions() {
         if (!__completed_) __rollback_();
@@ -62,9 +61,7 @@ struct __exception_guard_noexceptions {
     __exception_guard_noexceptions& operator=(__exception_guard_noexceptions const&) = delete;
     __exception_guard_noexceptions& operator=(__exception_guard_noexceptions&&)      = delete;
 
-    _MYSTL_CONSTEXPR_SINCE_CXX20 void __complete() noexcept {
-        __completed_ = true;
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX20 void __complete() noexcept { __completed_ = true; }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 ~__exception_guard_noexceptions() {}
 

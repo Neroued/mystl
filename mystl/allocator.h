@@ -57,21 +57,13 @@ public:
         using other = allocator<_Up>;
     };
 
-    pointer address(reference __x) const noexcept {
-        return std::addressof(__x);
-    }
+    pointer address(reference __x) const noexcept { return std::addressof(__x); }
 
-    const_pointer address(const_reference __x) const noexcept {
-        return std::addressof(__x);
-    }
+    const_pointer address(const_reference __x) const noexcept { return std::addressof(__x); }
 
-    [[nodiscard]] _Tp* allocate(size_t __n, const void*) {
-        return allocate(__n);
-    }
+    [[nodiscard]] _Tp* allocate(size_t __n, const void*) { return allocate(__n); }
 
-    size_type max_size() const noexcept {
-        return size_type(~0) / sizeof(_Tp);
-    }
+    size_type max_size() const noexcept { return size_type(~0) / sizeof(_Tp); }
 
     // 使用placement new, 在分配好的内存上构造对象
     // 语法为 new (address) Type (constructor_arguments)
@@ -80,9 +72,7 @@ public:
         ::new ((void*)__p) _Up(std::forward<_Args>(__args)...);
     }
 
-    void destroy(pointer __p) {
-        __p->~_Tp();
-    }
+    void destroy(pointer __p) { __p->~_Tp(); }
 
 #endif // _MYSTL_CXX_VERSION <= 17
 };

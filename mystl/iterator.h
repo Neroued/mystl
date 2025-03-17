@@ -133,9 +133,7 @@ public:
 
     // operators
     // 解引用与 ->
-    [[nodiscard]] _MYSTL_CONSTEXPR_SINCE_CXX14 reference operator*() const noexcept {
-        return *it;
-    }
+    [[nodiscard]] _MYSTL_CONSTEXPR_SINCE_CXX14 reference operator*() const noexcept { return *it; }
 
 #if _MYSTL_CXX_VERSION >= 20
     _MYSTL_CONSTEXPR_SINCE_CXX14 pointer operator->() const noexcept
@@ -148,9 +146,7 @@ public:
         }
     }
 #else
-    _MYSTL_CONSTEXPR_SINCE_CXX14 pointer operator->() const noexcept {
-        return std::addressof(operator*());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX14 pointer operator->() const noexcept { return std::addressof(operator*()); }
 #endif // _MYSTL_CXX_VERSION >= 20
 
     // 自增自减
@@ -200,14 +196,10 @@ public:
     }
 
     // [] 运算符
-    _MYSTL_CONSTEXPR_SINCE_CXX14 reference operator[](difference_type __n) const noexcept {
-        return it[__n];
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX14 reference operator[](difference_type __n) const noexcept { return it[__n]; }
 
     // base() 返回被包装前的迭代器
-    _MYSTL_CONSTEXPR_SINCE_CXX14 iterator_type base() const noexcept {
-        return it;
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX14 iterator_type base() const noexcept { return it; }
 
 private:
     // 将构造函数设置为私有，避免外部使用
@@ -353,9 +345,7 @@ public:
         return *this;
     }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX17 Iter base() const {
-        return current;
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX17 Iter base() const { return current; }
 
     // 反向迭代器返回前一个位置的元素
     _MYSTL_CONSTEXPR_SINCE_CXX17 reference operator*() const {
@@ -376,9 +366,7 @@ public:
         }
     }
 #else
-    _MYSTL_CONSTEXPR_SINCE_CXX17 pointer operator->() const {
-        return std::addressof(operator*());
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX17 pointer operator->() const { return std::addressof(operator*()); }
 #endif // _MYSTL_CXX_VERSION >= 20
 
     // 定义相反的自增自减运算
@@ -405,18 +393,14 @@ public:
     }
 
     // 定义相反的 +, +=, -, -=
-    _MYSTL_CONSTEXPR_SINCE_CXX17 reverse_iterator operator+(difference_type __n) const {
-        return reverse_iterator(current - __n);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX17 reverse_iterator operator+(difference_type __n) const { return reverse_iterator(current - __n); }
 
     _MYSTL_CONSTEXPR_SINCE_CXX17 reverse_iterator& operator+=(difference_type __n) {
         current -= __n;
         return *this;
     }
 
-    _MYSTL_CONSTEXPR_SINCE_CXX17 reverse_iterator operator-(difference_type __n) const {
-        return reverse_iterator(current + __n);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX17 reverse_iterator operator-(difference_type __n) const { return reverse_iterator(current + __n); }
 
     _MYSTL_CONSTEXPR_SINCE_CXX17 reverse_iterator& operator-=(difference_type __n) {
         current += __n;
@@ -424,9 +408,7 @@ public:
     }
 
     // [] 运算符
-    _MYSTL_CONSTEXPR_SINCE_CXX17 reference operator[](difference_type __n) {
-        return *(*this + __n);
-    }
+    _MYSTL_CONSTEXPR_SINCE_CXX17 reference operator[](difference_type __n) { return *(*this + __n); }
 };
 
 // 迭代器之间的比较运算

@@ -5,6 +5,7 @@
 #include <cstring>
 #include <exception_guard.h>
 #include <iterator.h>
+#include <memory>
 #include <type_traits>
 
 
@@ -38,7 +39,8 @@ _MYSTL_CONSTEXPR_SINCE_CXX14 void __uninitialized_allocator_relocate(_Alloc& __a
     if (IS_CONSTANT_EVALUATED() || !std::is_trivially_copyable<_ValueType>::value || !std::is_nothrow_move_constructible<_ValueType>::value ||
         !std::is_trivially_destructible<_ValueType>::value) {
         auto __destruct_first = __result;
-        auto __guard = __make_exception_guard(_AllocatorDestroyRangeReverse<_Alloc, _ContiguousIterator>(__alloc_, __destruct_first, __result));
+        auto __guard =
+            mystl::__make_exception_guard(_AllocatorDestroyRangeReverse<_Alloc, _ContiguousIterator>(__alloc_, __destruct_first, __result));
 
         // 迁移数据
         auto __iter = __first;
@@ -71,7 +73,7 @@ _MYSTL_CONSTEXPR_SINCE_CXX20 _Iter2 __unintialized_allocator_copy(_Alloc& __allo
 template <class _Alloc, class _Iter1, class _Sent1, class _Iter2>
 _MYSTL_CONSTEXPR_SINCE_CXX20 _Iter2 __unintialized_allocator_copy_impl(_Alloc& __alloc, _Iter1 __first1, _Sent1 __last1, _Iter2 __first2) {
     auto __destruct_first = __first2;
-    auto __guard          = __make_exception_guard(_AllocatorDestroyRangeReverse<_Alloc, _Iter2>(__alloc, __destruct_first, __first2));
+    auto __guard          = mystl::__make_exception_guard(_AllocatorDestroyRangeReverse<_Alloc, _Iter2>(__alloc, __destruct_first, __first2));
     while (__first1 != __last1) {
         std::allocator_traits<_Alloc>::construct(__alloc, std::addressof(*__first2), *__first1);
         ++__first1;
