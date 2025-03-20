@@ -10,15 +10,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 endif()
 
 include_directories(mystl)
+include_directories(test/include)
+include_directories(test/container)
 
-add_executable(allocator_compatibility test/allocator_compatibility.cpp)
-add_executable(allocator_performance test/allocator_performance.cpp)
-add_executable(vector test/vector.cpp)
-add_executable(list test/list.cpp)
-add_executable(wrap_iter test/wrap_iter.cpp)
-add_executable(reverse_iterator test/reverse_iterator.cpp)
+add_executable(test test/test.cpp)
 
-add_executable(meta test/meta.cpp)
 
 # target_compile_options(allocator_compatibility PUBLIC)
 # target_compile_options(allocator_performance PUBLIC)
