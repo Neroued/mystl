@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <allocator.h>
+#include <cassert>
 #include <config.h>
 #include <exception_guard.h>
 #include <initializer_list>
@@ -597,9 +598,9 @@ public:
     }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 void swap(vector& __other) noexcept {
-        static_assert(alloc_traits::propagate_on_container_swap::value || __alloc_ == __other.__alloc_,
-                      "vector::swap: Either propagate_on_container_swap must be true"
-                      " or the allocators must compare equal");
+        if (!alloc_traits::propagate_on_container_swap::value && !(__alloc_ == __other.__alloc_)) {
+            assert(false && "vector::swap: allocators must compare equal when propagate_on_container_swap is false");
+        }
         std::swap(__begin_, __other.__begin_);
         std::swap(__end_, __other.__end_);
         std::swap(__cap_, __other.__cap_);
@@ -813,8 +814,8 @@ private:
         size_type __new_cap = __recommend(size() + 1);
         // 创建缓冲区
         __reallocation_buffer __buffer(__alloc_, __new_cap);
-        // 在缓冲区末尾构造新的元素
-        alloc_traits::construct(__alloc_, std::addressof(*__buffer.__end_), std::forward<_Args>(__args)...);
+        // 在缓冲区对应位置构造元素
+        alloc_traits::construct(__alloc_, std::addressof(*(__buffer.__begin_ + size())), std::forward<_Args>(__args)...);
         ++__buffer.__end_;
         // 将旧数据移动到新缓冲区
         __swap_reallocation_buffer(__buffer);
