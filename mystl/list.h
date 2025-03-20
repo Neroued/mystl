@@ -3,6 +3,7 @@
 
 #include <allocation_guard.h>
 #include <allocator.h>
+#include <cassert>
 #include <config.h>
 #include <cstddef>
 #include <functional>
@@ -266,7 +267,7 @@ protected:
     using const_iterator           = __list_const_iterator<value_type, __void_pointer>;
     using __node_base              = __list_node_base<value_type, __void_pointer>;
     using __node_type              = __list_node<value_type, __void_pointer>;
-    using __node_allocator         = alloc_traits::template rebind_alloc<__node_type>;
+    using __node_allocator         = typename alloc_traits::template rebind_alloc<__node_type>;
     using __node_alloc_traits      = std::allocator_traits<__node_allocator>;
     using __node_pointer           = typename __node_alloc_traits::pointer;
     using __node_const_pointer     = typename __node_alloc_traits::pointer;
@@ -276,7 +277,7 @@ protected:
     using pointer                  = typename alloc_traits::pointer;
     using const_pointer            = typename alloc_traits::const_pointer;
     using difference_type          = typename alloc_traits::difference_type;
-    using __node_base_allocator    = alloc_traits::template rebind_alloc<__node_base>;
+    using __node_base_allocator    = typename alloc_traits::template rebind_alloc<__node_base>;
     using __node_base_alloc_traits = std::allocator_traits<__node_base_allocator>;
     using __node_base_pointer      = typename __node_base_alloc_traits::pointer;
 
@@ -323,9 +324,9 @@ protected:
     const_iterator end() const noexcept { return const_iterator(__end_as_link()); }
 
     void swap(__list_imp& __other) noexcept {
-        static_assert(alloc_traits::propagate_on_container_swap::value || this->__node_alloc_ == __other.__node_alloc_,
-                      "list::swap: Either propagate_on_container_swap must be true"
-                      " or the allocators must compare equal");
+        if (!alloc_traits::propagate_on_container_swap::value && !(this->__node_alloc_ == __other.__node_alloc_)) {
+            assert(false && "list::swap: allocators must compare equal when propagate_on_container_swap is false");
+        }
         std::swap(__node_alloc_, __other.__node_alloc_);
         std::swap(__size_, __other.__size_);
         std::swap(__end_, __other.__end_);
@@ -455,7 +456,7 @@ public:
     }
 
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>>
+    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value, int> = 0>
 #else
     template <BasedOnInputIterator _InputIterator>
 #endif
@@ -464,7 +465,7 @@ public:
     }
 
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>>
+    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value, int> = 0>
 #else
     template <BasedOnInputIterator _InputIterator>
 #endif
@@ -519,7 +520,7 @@ public:
     }
 
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>>
+    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value, int> = 0>
 #else
     template <BasedOnInputIterator _InputIterator>
 #endif
@@ -671,7 +672,7 @@ public:
     }
 
 #if _MYSTL_CXX_VERSION <= 17
-    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>>
+    template <class _InputIterator, std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value, int> = 0>
 #else
     template <BasedOnInputIterator _InputIterator>
 #endif
@@ -865,7 +866,7 @@ public:
                 iterator __j = std::next(__i);
                 for (; __j != __e && *__j == __x; ++__j); // 找到下一个不同元素为止
                 __deleted_nodes.splice(__deleted_nodes.end(), *this, __i, __j);
-                __i = __j; // __j 已经不满足条件
+                __i = __j;                                // __j 已经不满足条件
                 if (__i != __e) { ++__i; }
             } else {
                 ++__i;
@@ -954,7 +955,16 @@ public:
         __sort(begin(), end(), __base::__size_, __comp);
     }
 
-    void reverse() noexcept;
+    void reverse() noexcept {
+        if (__base::__size_ > 1) {
+            iterator __e = end();
+            for (iterator __i = begin(); __i.__ptr_ != __e.__ptr_;) {
+                std::swap(__i.__ptr_->__prev_, __i.__ptr_->__next_);
+                __i.__ptr_ = __i.__ptr_->__prev_;
+            }
+            std::swap(__e.__ptr_->__prev_, __e.__ptr_->__next_);
+        }
+    }
 
 private:
     // 将 [__first, __last] 之间的节点连接到 __p 之前
@@ -1071,6 +1081,76 @@ template <class _InputIterator, class _Alloc = allocator<typename iterator_trait
           typename = std::enable_if_t<mystl::is_allocator<_Alloc>::value>>
 list(_InputIterator, _InputIterator, _Alloc) -> list<typename iterator_traits<_InputIterator>::value_type, _Alloc>;
 
+template <class _Tp, class _Alloc>
+inline bool operator==(const list<_Tp, _Alloc>& __x, const list<_Tp, _Alloc>& __y) {
+    if (__x.size() != __y.size()) { return false; }
+    typename list<_Tp, _Alloc>::const_iterator __f1 = __x.begin();
+    typename list<_Tp, _Alloc>::const_iterator __e1 = __x.end();
+    typename list<_Tp, _Alloc>::const_iterator __f2 = __y.begin();
+    while (__f1 != __e1) {
+        if (*__f1 != *__f2) { return false; }
+        ++__f1;
+        ++__f2;
+    }
+    return true;
+}
+
+#if _MYSTL_CXX_VERSION <= 17
+
+template <class _Tp, class _Alloc>
+inline bool operator<(const list<_Tp, _Alloc>& __x, const list<_Tp, _Alloc>& __y) {
+    typename list<_Tp, _Alloc>::const_iterator __f1 = __x.begin();
+    typename list<_Tp, _Alloc>::const_iterator __e1 = __x.end();
+    typename list<_Tp, _Alloc>::const_iterator __f2 = __y.begin();
+    typename list<_Tp, _Alloc>::const_iterator __e2 = __y.end();
+    while (__f1 != __e1 && __f2 != __e2) {
+        if (*__f1 < *__f2) { return true; }
+        if (*__f2 < *__f1) { return false; }
+        ++__f1;
+        ++__f2;
+    }
+    // __x 遍历完但 __y 没有遍历完，表示 __x 是 __y 的前缀
+    return (__f1 == __e1) && (__f2 != __e2);
+}
+
+template <class _Tp, class _Alloc>
+inline bool operator!=(const list<_Tp, _Alloc>& __x, const list<_Tp, _Alloc>& __y) {
+    return !(__x == __y);
+}
+
+template <class _Tp, class _Alloc>
+inline bool operator>(const list<_Tp, _Alloc>& __x, const list<_Tp, _Alloc>& __y) {
+    return __y < __x;
+}
+
+template <class _Tp, class _Alloc>
+inline bool operator>=(const list<_Tp, _Alloc>& __x, const list<_Tp, _Alloc>& __y) {
+    return !(__x < __y);
+}
+
+template <class _Tp, class _Alloc>
+inline bool operator<=(const list<_Tp, _Alloc>& __x, const list<_Tp, _Alloc>& __y) {
+    return !(__y < __x);
+}
+
+
+#else // _MYSTL_CXX_VERSION <= 17
+
+template <class _Tp, class _Alloc>
+auto operator<=>(const list<_Tp, _Alloc>& __x, const list<_Tp, _Alloc>& __y) {
+    return std::lexicographical_compare_three_way(__x.begin(), __x.end(), __y.begin(), __y.end());
+}
+
+#endif
+
+
 _MYSTL_END_NAMESPACE_MYSTL
+
+namespace std {
+template <class _Tp, class _Alloc>
+inline void swap(mystl::list<_Tp, _Alloc>& __x, mystl::list<_Tp, _Alloc>& __y) noexcept(noexcept(__x.swap(__y))) {
+    __x.swap(__y);
+}
+} // namespace std
 
 #endif // _MYSTL_LIST_H
