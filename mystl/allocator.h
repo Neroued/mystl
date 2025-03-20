@@ -36,13 +36,13 @@ public:
     [[nodiscard]] _MYSTL_CONSTEXPR_SINCE_CXX20 value_type* allocate(size_type __n) {
         static_assert(sizeof(value_type) >= 0, "cannot allocate memory for an incomplete type");
         if (__n > std::allocator_traits<allocator>::max_size(*this)) throw std::bad_array_new_length();
-        std::cout << "[mystl::allocator]: allocate " << __n << std::endl;
+        // std::cout << "[mystl::allocator]: allocate " << __n << std::endl;
         return static_cast<value_type*>(alloc::allocate(__n * sizeof(value_type)));
     }
 
     _MYSTL_CONSTEXPR_SINCE_CXX20 void deallocate(value_type* __p, size_type __n) noexcept {
         alloc::deallocate(__p, __n);
-        std::cout << "[mystl::allocator]: deallocate " << __n << std::endl;
+        // std::cout << "[mystl::allocator]: deallocate " << __n << std::endl;
     }
 
     // 以下在 C++20 中移除

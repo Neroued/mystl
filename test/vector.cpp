@@ -10,7 +10,7 @@
 
 
 
-constexpr size_t NUM_ELEMENTS = 100000;
+constexpr size_t NUM_ELEMENTS = 1000;
 
 // 非平凡类
 struct NonTrivialData {
@@ -83,29 +83,30 @@ struct TrivialData {
 
 template <typename Vector>
 void benchmark(const char* vectName) {
+    auto start = std::chrono::high_resolution_clock::now();
     Vector vec;
     vec.reserve(NUM_ELEMENTS);
-    for (int i = 0; i < NUM_ELEMENTS; ++i) { vec.emplace_back(i); }
+    for (int i = 0; i < NUM_ELEMENTS; ++i) { vec.emplace_back(); }
 
     // for (int i = 0; i < 15; ++i) { std::cout << vec[i] << ", "; }
     // std::cout << std::endl;
 
-    Vector vect = Vector(10, 100);
+    // Vector vect = Vector(10, 100);
 
-    auto start = std::chrono::high_resolution_clock::now();
+    
     // typename Vector::reference x = vec[NUM_ELEMENTS / 2 - 5];
     auto& x = vec[10];
     // auto it = vec.insert(vec.begin() + 1, vect.begin() + 10, vect.end());
     // auto it = vec.emplace(vec.begin() + 5, 1000);
     // auto it = vec.erase(vec.begin() + 5, vec.begin() + 100);
     // vect.assign({999, 123123, 12313213, 6, 5, 1235});
-    vec.assign(vect.begin(), vect.end());
+    // vec.assign(vect.begin(), vect.end());
     vec.shrink_to_fit();
 
 
 
-    for (int i = 0; i < std::min(static_cast<decltype(vect.size())>(15), vect.size()); ++i) { std::cout << vect[i] << ", "; }
-    std::cout << std::endl;
+    // for (int i = 0; i < std::min(static_cast<decltype(vect.size())>(15), vect.size()); ++i) { std::cout << vect[i] << ", "; }
+    // std::cout << std::endl;
     // std::cout << "*it = " << *it << std::endl;
     // std::cout << "*++it = " << *++it << std::endl;
 
@@ -133,27 +134,27 @@ int main() {
     // 使用自定义 vector 进行测试 int
     benchmark<mystl::vector<int, mystl_allocator<int>>>("mystl::vector<int>");
 
-    // // 使用标准 vector 进行测试 TrivialData
-    // benchmark<std::vector<TrivialData, std_allocator<TrivialData>>>("std::vector<TrivialData>");
+    // 使用标准 vector 进行测试 TrivialData
+    benchmark<std::vector<TrivialData, std_allocator<TrivialData>>>("std::vector<TrivialData>");
 
-    // // 使用自定义 vector 进行测试 TrivialData
-    // benchmark<mystl::vector<TrivialData, mystl_allocator<TrivialData>>>("mystl::vector<TrivialData>");
+    // 使用自定义 vector 进行测试 TrivialData
+    benchmark<mystl::vector<TrivialData, mystl_allocator<TrivialData>>>("mystl::vector<TrivialData>");
 
-    // std::cout << "benchmark TrivialData ok." << std::endl;
+    std::cout << "benchmark TrivialData ok." << std::endl;
 
-    // // 使用标准 vector 进行测试 NonTrivialData
-    // benchmark<std::vector<NonTrivialData, std_allocator<NonTrivialData>>>("std::vector<NonTrivialData>");
+    // 使用标准 vector 进行测试 NonTrivialData
+    benchmark<std::vector<NonTrivialData, std_allocator<NonTrivialData>>>("std::vector<NonTrivialData>");
 
-    // // 使用自定义 vector 进行测试 NonTrivialData
-    // benchmark<mystl::vector<NonTrivialData, mystl_allocator<NonTrivialData>>>("mystl::vector<NonTrivialData>");
+    // 使用自定义 vector 进行测试 NonTrivialData
+    benchmark<mystl::vector<NonTrivialData, mystl_allocator<NonTrivialData>>>("mystl::vector<NonTrivialData>");
 
-    // // 使用标准 vector 进行测试 std::string
-    // benchmark<std::vector<std::string, std_allocator<std::string>>>("std::vector<std::string>");
+    // 使用标准 vector 进行测试 std::string
+    benchmark<std::vector<std::string, std_allocator<std::string>>>("std::vector<std::string>");
 
-    // // 使用自定义 vector 进行测试 std::string
-    // benchmark<mystl::vector<std::string, mystl_allocator<std::string>>>("mystl::vector<std::string>");
+    // 使用自定义 vector 进行测试 std::string
+    benchmark<mystl::vector<std::string, mystl_allocator<std::string>>>("mystl::vector<std::string>");
 
-    // std::cout << "benchmark NonTrivialData ok." << std::endl;
+    std::cout << "benchmark NonTrivialData ok." << std::endl;
 
     mystl::vector<int, mystl::allocator<int>> vec4({1, 2, 3, 4, 5});
     for (auto x : vec4) { std::cout << x << ", "; }
@@ -161,6 +162,8 @@ int main() {
 
     mystl::vector<int> vec = mystl::vector<int>(10);
     mystl::vector vec2(vec.begin(), vec.end());
+
+    std::vector stdvec(vec.begin(), vec.end());
 
     return 0;
 }

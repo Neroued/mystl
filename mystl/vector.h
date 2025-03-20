@@ -946,12 +946,12 @@ private:
 // CTAD
 template <class _InputIterator, class _Alloc = allocator<typename iterator_traits<_InputIterator>::value_type>,
           typename = std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>,
-          typename = std::enable_if_t<is_allocator<_Alloc>::value>>
+          typename = std::enable_if_t<mystl::is_allocator<_Alloc>::value>>
 vector(_InputIterator, _InputIterator) -> vector<typename iterator_traits<_InputIterator>::value_type, _Alloc>;
 
 template <class _InputIterator, class _Alloc = allocator<typename iterator_traits<_InputIterator>::value_type>,
           typename = std::enable_if_t<mystl::is_based_on_input_iterator<_InputIterator>::value>,
-          typename = std::enable_if_t<is_allocator<_Alloc>::value>>
+          typename = std::enable_if_t<mystl::is_allocator<_Alloc>::value>>
 vector(_InputIterator, _InputIterator, _Alloc) -> vector<typename iterator_traits<_InputIterator>::value_type, _Alloc>;
 
 _MYSTL_END_NAMESPACE_MYSTL
